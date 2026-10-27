@@ -56,7 +56,10 @@ Metrics/BlockLength:
     - describe
     - context
     - shared_examples
+    - shared_examples_for
     - shared_context
+    - feature
+    - configure
     - refine
   CountAsOne:
     - array
