@@ -1,0 +1,4 @@
+module SharpStyleRubocop
+  VERSION: String
+  CONFIG_PATH: String
+end
