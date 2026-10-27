@@ -6,6 +6,7 @@ name: Canary
 # than failing the run.
 
 on:
+  push:
   schedule:
     - cron: '0 9 * * 1'
   workflow_dispatch:
