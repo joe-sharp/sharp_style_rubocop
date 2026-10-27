@@ -1,0 +1,130 @@
+name: Canary
+
+# Runs the shared config against public projects every week. The stable pass
+# must stay green. The pending and preview passes are reports: they show what
+# the next release would change, so they are posted to a tracking issue rather
+# than failing the run.
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    name: Canary (${{ matrix.repo }})
+    strategy:
+      fail-fast: false
+      matrix:
+        repo:
+          - joe-sharp/boondoc
+          - joe-sharp/mtg_card_maker
+          - joe-sharp/guard-status
+    env:
+      # Bundler uses this repo's Gemfile, so every canary run resolves the newest
+      # rubocop allowed by the gemspec, including new minor releases.
+      BUNDLE_GEMFILE: ${{ github.workspace }}/shared/Gemfile
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: shared
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ matrix.repo }}
+          path: target
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+      - name: Install shared config
+        working-directory: shared
+        run: bundle install
+      - name: Write canary config
+        working-directory: target
+        run: |
+          printf 'inherit_from: ../shared/config/default.yml\n' > .rubocop-canary.yml
+      - name: Run passes
+        id: run
+        working-directory: target
+        run: |
+          set +e
+          out="$RUNNER_TEMP/canary"
+          mkdir -p "$out"
+          bundle exec rubocop -c .rubocop-canary.yml --format json --out "$out/stable.json"; echo $? > "$out/stable.rc"
+          bundle exec rubocop -c .rubocop-canary.yml --enable-pending-cops --format json --out "$out/pending.json"; echo $? > "$out/pending.rc"
+          bundle exec rubocop -c .rubocop-canary.yml --preview --format json --out "$out/preview.json"; echo $? > "$out/preview.rc"
+      - name: Build report
+        if: always()
+        run: |
+          out="$RUNNER_TEMP/canary"
+          report="$RUNNER_TEMP/report-${{ strategy.job-index }}.md"
+          {
+            echo "### ${{ matrix.repo }}"
+            echo
+            if [ "$(cat "$out/stable.rc" 2>/dev/null)" = "0" ]; then
+              echo "- **Stable:** passed"
+            else
+              echo "- **Stable:** **failed**"
+            fi
+            for pass in pending preview; do
+              count=$(jq -r '.summary.offense_count // "not run"' "$out/$pass.json" 2>/dev/null)
+              echo "- **${pass^}:** $count offenses"
+            done
+            echo
+            for pass in stable pending preview; do
+              [ -f "$out/$pass.json" ] || continue
+              echo "<details><summary>$pass cops</summary>"
+              echo
+              jq -r '[.files[].offenses[].cop_name] | group_by(.) | map("- `\(.[0])`: \(length)") | .[]' "$out/$pass.json"
+              echo
+              echo "</details>"
+              echo
+            done
+          } > "$report"
+          cat "$report" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canary-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/report-${{ strategy.job-index }}.md
+      - name: Fail on stable offenses
+        run: test "$(cat "$RUNNER_TEMP/canary/stable.rc")" = "0"
+
+  report:
+    needs: canary
+    if: always()
+    runs-on: ubuntu-latest
+    name: Post canary report
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: canary-*
+          path: reports
+          merge-multiple: true
+      - name: Post to tracking issue
+        run: |
+          body="$RUNNER_TEMP/body.md"
+          {
+            echo "Canary run [#${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
+            echo
+            cat reports/*.md
+          } > "$body"
+          find_issue() {
+            gh issue list --state open --search 'in:title "Canary report"' --json number --jq '.[0].number'
+          }
+          number=$(find_issue)
+          if [ -z "$number" ]; then
+            gh issue create --title "Canary report" --body "Weekly RuboCop canary results for the shared config. Each run posts a comment here, so subscribing to this issue gives you notifications."
+            number=$(find_issue)
+          fi
+          gh issue comment "$number" --body-file "$body"
