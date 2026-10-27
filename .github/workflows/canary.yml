@@ -1,12 +1,16 @@
 name: Canary
 
-# Runs the shared config against public projects every week. The stable pass
-# must stay green. The pending and preview passes are reports: they show what
-# the next release would change, so they are posted to a tracking issue rather
-# than failing the run.
+# Runs the shared config against public projects on pull requests, on pushes to
+# main, and weekly. The stable pass must stay green. The pending and preview
+# passes are reports: they show what the next release would change, so they are
+# posted as a comment rather than failing the run. Pull requests get the comment
+# on the PR. Pushes to main post to the tracking issue (#2). Other pushes are
+# not reported.
 
 on:
+  pull_request:
   push:
+    branches: [main]
   schedule:
     - cron: '0 9 * * 1'
   workflow_dispatch:
@@ -63,6 +67,23 @@ jobs:
         run: |
           out="$RUNNER_TEMP/canary"
           report="$RUNNER_TEMP/report-${{ strategy.job-index }}.md"
+          valid() { jq -e . "$1" >/dev/null 2>&1; }
+          count() {
+            if valid "$1"; then jq -r '.summary.offense_count' "$1"; else echo "not run"; fi
+          }
+          by_cop() {
+            jq -r '[.files[].offenses[].cop_name] | group_by(.) | map("- `\(.[0])`: \(length)") | .[]' "$1"
+          }
+          # Offenses in a pass beyond the stable pass, per cop.
+          new_by_cop() {
+            jq -r --slurpfile base "$out/stable.json" '
+              def counts: [.files[].offenses[].cop_name] | group_by(.) | map({key: .[0], value: length}) | from_entries;
+              (counts) as $now | ($base[0] | counts) as $old
+              | $now | to_entries[]
+              | select(.value > ($old[.key] // 0))
+              | "- `\(.key)`: +\(.value - ($old[.key] // 0))"
+            ' "$1"
+          }
           {
             echo "### ${{ matrix.repo }}"
             echo
@@ -71,16 +92,28 @@ jobs:
             else
               echo "- **Stable:** **failed**"
             fi
+            stable=$(count "$out/stable.json")
             for pass in pending preview; do
-              count=$(jq -r '.summary.offense_count // "not run"' "$out/$pass.json" 2>/dev/null)
-              echo "- **${pass^}:** $count offenses"
+              if valid "$out/stable.json" && valid "$out/$pass.json"; then
+                diff=$(( $(count "$out/$pass.json") - stable ))
+                echo "- **${pass^}:** $(printf '%+d' "$diff") offenses vs stable"
+              else
+                echo "- **${pass^}:** not run"
+              fi
             done
             echo
             for pass in stable pending preview; do
-              [ -f "$out/$pass.json" ] || continue
               echo "<details><summary>$pass cops</summary>"
               echo
-              jq -r '[.files[].offenses[].cop_name] | group_by(.) | map("- `\(.[0])`: \(length)") | .[]' "$out/$pass.json"
+              if ! valid "$out/$pass.json"; then
+                echo "not run"
+              elif [ "$pass" = stable ]; then
+                by_cop "$out/stable.json"
+              elif valid "$out/stable.json"; then
+                new_by_cop "$out/$pass.json"
+              else
+                echo "not run"
+              fi
               echo
               echo "</details>"
               echo
@@ -103,16 +136,22 @@ jobs:
     name: Post canary report
     permissions:
       issues: write
+      pull-requests: write
+    # Serialize posts so overlapping runs do not interleave or drop comments.
+    concurrency:
+      group: canary-report
+      cancel-in-progress: false
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_REPO: ${{ github.repository }}
+      ISSUE_NUMBER: 2
     steps:
       - uses: actions/download-artifact@v4
         with:
           pattern: canary-*
           path: reports
           merge-multiple: true
-      - name: Post to tracking issue
+      - name: Build comment body
         run: |
           body="$RUNNER_TEMP/body.md"
           {
@@ -120,12 +159,11 @@ jobs:
             echo
             cat reports/*.md
           } > "$body"
-          find_issue() {
-            gh issue list --state open --search 'in:title "Canary report"' --json number --jq '.[0].number'
-          }
-          number=$(find_issue)
-          if [ -z "$number" ]; then
-            gh issue create --title "Canary report" --body "Weekly RuboCop canary results for the shared config. Each run posts a comment here, so subscribing to this issue gives you notifications."
-            number=$(find_issue)
-          fi
-          gh issue comment "$number" --body-file "$body"
+      # Fork pull requests get a read-only token, so this step fails for them.
+      # The report is still in the run's step summary.
+      - name: Comment on pull request
+        if: github.event_name == 'pull_request'
+        run: gh pr comment "${{ github.event.pull_request.number }}" --body-file "$RUNNER_TEMP/body.md"
+      - name: Comment on tracking issue
+        if: github.ref == 'refs/heads/main'
+        run: gh issue comment "$ISSUE_NUMBER" --body-file "$RUNNER_TEMP/body.md"
