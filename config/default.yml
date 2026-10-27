@@ -9,6 +9,8 @@ AllCops:
     - 'spec/fixtures/**/*'
     - 'vendor/**/*'
     - 'tmp/**/*'
+    - 'node_modules/**/*'
+    - '.git/**/*'
 
 # Pending cops are enabled per department. A version value enables pending
 # cops added in that version or earlier; cops added after it stay pending.
@@ -54,7 +56,8 @@ Metrics/BlockLength:
     - describe
     - context
     - shared_examples
-    - shared_content
+    - shared_context
+    - refine
   CountAsOne:
     - array
     - hash
