@@ -29,7 +29,7 @@ Naming:
 # rubocop-performance plugin
 Performance:
   NewCops: '1.24'
-# rubcop-rspec plugin
+# rubocop-rspec plugin
 RSpec:
   NewCops: '3.10'
 Security:
