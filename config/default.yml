@@ -3,12 +3,40 @@ plugins:
   - rubocop-rspec
 
 AllCops:
-  NewCops: enable
+  NewCops: pending
   SuggestExtensions: false
   Exclude:
     - 'spec/fixtures/**/*'
     - 'vendor/**/*'
     - 'tmp/**/*'
+
+# Pending cops are enabled per department. A version value enables pending
+# cops added in that version or earlier; cops added after it stay pending.
+Bundler:
+  NewCops: '1.92'
+Gemspec:
+  NewCops: '1.92'
+Layout:
+  NewCops: '1.92'
+Lint:
+  NewCops: '1.92'
+Metrics:
+  NewCops: '1.92'
+Migration:
+  NewCops: '1.92'
+Naming:
+  NewCops: '1.92'
+# rubocop-performance plugin
+Performance:
+  NewCops: '1.24'
+# rubcop-rspec plugin
+RSpec:
+  NewCops: '3.10'
+Security:
+  NewCops: '1.92'
+Style:
+  NewCops: '1.92'
+# End NewCops overrides
 
 Layout/EndOfLine:
   EnforcedStyle: lf
