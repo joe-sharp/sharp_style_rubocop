@@ -1,0 +1,5 @@
+/.bundle/
+/.rspec_status
+/Gemfile.lock
+/pkg/
+/tmp/

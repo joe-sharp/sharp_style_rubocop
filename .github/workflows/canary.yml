@@ -1,0 +1,185 @@
+name: Canary
+
+# Runs the shared config against public projects on pull requests and weekly.
+# The stable pass must stay green. The pending and preview passes are reports:
+# they show what the next release would change, so they are posted as a comment
+# rather than failing the run. Pull requests get one comment on the PR, updated
+# on each push. The weekly run and manual runs on main post a new comment to the
+# tracking issue (#2). Manual runs on other branches are not reported.
+
+on:
+  pull_request:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    name: Canary (${{ matrix.repo }})
+    strategy:
+      fail-fast: false
+      matrix:
+        repo:
+          - joe-sharp/boondoc
+          - joe-sharp/mtg_card_maker
+          - joe-sharp/guard-status
+    env:
+      # Bundler uses this repo's Gemfile, so every canary run resolves the newest
+      # rubocop allowed by the gemspec, including new minor releases.
+      BUNDLE_GEMFILE: ${{ github.workspace }}/shared/Gemfile
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: shared
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ matrix.repo }}
+          path: target
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0'
+      - name: Install shared config
+        working-directory: shared
+        run: bundle install
+      # Keep the target's file excludes and Ruby version so the canary lints what
+      # the project lints. Its cop overrides are dropped: they would mask the
+      # shared config, which is what the canary tests.
+      - name: Write canary config
+        working-directory: target
+        run: |
+          ruby -ryaml -e '
+            target = File.exist?(".rubocop.yml") ? YAML.safe_load_file(".rubocop.yml", aliases: true) || {} : {}
+            all_cops = target.fetch("AllCops", {}).slice("Exclude", "TargetRubyVersion")
+            config = {
+              "inherit_from" => "../shared/config/default.yml",
+              "inherit_mode" => { "merge" => ["Exclude"] }
+            }
+            config["AllCops"] = all_cops unless all_cops.empty?
+            File.write(".rubocop-canary.yml", config.to_yaml)
+          '
+      - name: Run passes
+        id: run
+        working-directory: target
+        run: |
+          set +e
+          out="$RUNNER_TEMP/canary"
+          mkdir -p "$out"
+          bundle exec rubocop -c .rubocop-canary.yml --format json --out "$out/stable.json"; echo $? > "$out/stable.rc"
+          bundle exec rubocop -c .rubocop-canary.yml --enable-pending-cops --format json --out "$out/pending.json"; echo $? > "$out/pending.rc"
+          bundle exec rubocop -c .rubocop-canary.yml --preview --format json --out "$out/preview.json"; echo $? > "$out/preview.rc"
+      - name: Build report
+        if: always()
+        run: |
+          out="$RUNNER_TEMP/canary"
+          report="$RUNNER_TEMP/report-${{ strategy.job-index }}.md"
+          valid() { jq -e . "$1" >/dev/null 2>&1; }
+          count() {
+            if valid "$1"; then jq -r '.summary.offense_count' "$1"; else echo "not run"; fi
+          }
+          by_cop() {
+            jq -r '[.files[].offenses[].cop_name] | group_by(.) | map("- `\(.[0])`: \(length)") | .[]' "$1"
+          }
+          # Per-cop offense changes in a pass relative to the stable pass, as
+          # {cop, diff} objects. Cops that gain and lose offenses are both kept so
+          # the two do not cancel out.
+          changes() {
+            jq -c --slurpfile base "$out/stable.json" '
+              def counts: [.files[].offenses[].cop_name] | group_by(.) | map({key: .[0], value: length}) | from_entries;
+              (counts) as $now | ($base[0] | counts) as $old
+              | [($now + $old | keys[]) as $k | {cop: $k, diff: (($now[$k] // 0) - ($old[$k] // 0))} | select(.diff != 0)]
+            ' "$1"
+          }
+          changes_by_cop() {
+            changes "$1" | jq -r '.[] | "- `\(.cop)`: \(if .diff > 0 then "+" else "" end)\(.diff)"'
+          }
+          changes_total() {
+            changes "$1" | jq -r '"+\(map(select(.diff > 0).diff) | add // 0) / -\(map(select(.diff < 0).diff) | add // 0 | -.)"'
+          }
+          {
+            echo "### ${{ matrix.repo }}"
+            echo
+            if [ "$(cat "$out/stable.rc" 2>/dev/null)" = "0" ]; then
+              echo "- **Stable:** passed"
+            else
+              echo "- **Stable:** **failed**"
+            fi
+            for pass in pending preview; do
+              if valid "$out/stable.json" && valid "$out/$pass.json"; then
+                echo "- **${pass^}:** $(changes_total "$out/$pass.json") offenses vs stable"
+              else
+                echo "- **${pass^}:** not run"
+              fi
+            done
+            echo
+            for pass in stable pending preview; do
+              echo "<details><summary>$pass cops</summary>"
+              echo
+              if ! valid "$out/$pass.json"; then
+                echo "not run"
+              elif [ "$pass" = stable ]; then
+                by_cop "$out/stable.json"
+              elif valid "$out/stable.json"; then
+                changes_by_cop "$out/$pass.json"
+              else
+                echo "not run"
+              fi
+              echo
+              echo "</details>"
+              echo
+            done
+          } > "$report"
+          cat "$report" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canary-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/report-${{ strategy.job-index }}.md
+      - name: Fail on stable offenses
+        run: test "$(cat "$RUNNER_TEMP/canary/stable.rc")" = "0"
+
+  report:
+    needs: canary
+    if: always()
+    runs-on: ubuntu-latest
+    name: Post canary report
+    permissions:
+      issues: write
+      pull-requests: write
+    # Serialize posts per pull request, and for main. A newer run replaces a
+    # pending one in the same group, which is fine for pull requests since they
+    # update a single comment.
+    concurrency:
+      group: canary-report-${{ github.event.pull_request.number || 'main' }}
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      ISSUE_NUMBER: 2
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: canary-*
+          path: reports
+          merge-multiple: true
+      - name: Build comment body
+        run: |
+          body="$RUNNER_TEMP/body.md"
+          {
+            echo "Canary run [#${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
+            echo
+            cat reports/*.md
+          } > "$body"
+      # Fork pull requests get a read-only token, so this step fails for them.
+      # The report is still in the run's step summary.
+      - name: Comment on pull request
+        if: github.event_name == 'pull_request'
+        run: gh pr comment "${{ github.event.pull_request.number }}" --edit-last --create-if-none --body-file "$RUNNER_TEMP/body.md"
+      - name: Comment on tracking issue
+        if: github.ref == 'refs/heads/main'
+        run: gh issue comment "$ISSUE_NUMBER" --body-file "$RUNNER_TEMP/body.md"
