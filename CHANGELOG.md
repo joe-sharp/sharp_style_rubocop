@@ -1,7 +1,9 @@
 ## [Unreleased]
 
-- Set `AllCops: NewCops: pending` so new cops added in RuboCop minor releases are reported but not enabled for consumers.
-- Set per-department `NewCops` so pending cops are enabled up to the versions reviewed: `Gemspec`, `Lint` and the other RuboCop departments are set to `1.92`, `Performance` to `1.24`, and `RSpec` to `3.10`.
+## [0.1.1] - 2026-10-28
+
+- Set `Layout/ArgumentAlignment` to `with_fixed_indentation` as a Preview default for RuboCop 2.0.
+- Disable `Naming/HeredocDelimiterNaming` as a Preview default for RuboCop 2.0.
 
 ## [0.1.0] - 2026-10-27
 
