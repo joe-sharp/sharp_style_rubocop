@@ -48,6 +48,10 @@ Style:
 Bundler/OrderedGems:
   Enabled: true
 
+# Rubocop 2.0
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_fixed_indentation
+
 # Align 'when/else' with 'end', prevents wasting whitespace
 Layout/CaseIndentation:
   EnforcedStyle: end
@@ -157,6 +161,10 @@ Metrics/ParameterLists:
 # Thresholds are the median overrides from rubocop/rubocop#15363
 Metrics/PerceivedComplexity:
   Max: 12
+
+# Rubocop 2.0
+Naming/HeredocDelimiterNaming:
+  Enabled: false
 
 # Be kind
 Naming/InclusiveLanguage:
