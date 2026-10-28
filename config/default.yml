@@ -5,8 +5,8 @@ plugins:
 AllCops:
   NewCops: pending
   SuggestExtensions: false
-  # Preview default, applied without enabling preview mode.
-  FailLevel: warning
+  # Preview of Rubocop 2.0 defaults to "warning"
+  FailLevel: refactor
   Exclude:
     - 'spec/fixtures/**/*'
     - 'vendor/**/*'
