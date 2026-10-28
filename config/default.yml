@@ -5,6 +5,8 @@ plugins:
 AllCops:
   NewCops: pending
   SuggestExtensions: false
+  # Preview default, applied without enabling preview mode.
+  FailLevel: warning
   Exclude:
     - 'spec/fixtures/**/*'
     - 'vendor/**/*'
@@ -40,9 +42,37 @@ Style:
   NewCops: '1.92'
 # End NewCops overrides
 
+# Remove "Rubocop 2.0" overrides after upgrading to Rubocop 2.0
+
+# Prefer gems alphebetized in their groups
+Bundler/OrderedGems:
+  Enabled: true
+
+# Align 'when/else' with 'end', prevents wasting whitespace
+Layout/CaseIndentation:
+  EnforcedStyle: end
+
+# Prefer empty lines after Guard Clauses
+Layout/EmptyLineAfterGuardClause:
+  Enabled: true
+
+# Rubocop 2.0
+Layout/EndAlignment:
+  EnforcedStyleAlignWith: variable
+
+# Force Windows users to use lf
 Layout/EndOfLine:
   EnforcedStyle: lf
 
+# Keep consistency, prevents wasting whitespace
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+
+# Keep consistency, prevents wasting whitespace
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+
+# Key is default for both, but also allow table alignment
 Layout/HashAlignment:
   EnforcedHashRocketStyle:
     - key
@@ -51,6 +81,25 @@ Layout/HashAlignment:
     - key
     - table
 
+# Prevent wasting whitespace
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+# Prevent wasting whitespace
+Layout/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+# Rubocop 2.0
+Layout/ParameterAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+# Overriding median (Max: 28) from rubocop/rubocop#15363
+# Default (Max: 17)
+Metrics/AbcSize:
+  Max: 22
+
+# Disabling median (Max: 50), because CountAsOne makes
+# the default (Max: 25) reasonable
 Metrics/BlockLength:
   AllowedMethods:
     - describe
@@ -67,37 +116,63 @@ Metrics/BlockLength:
     - heredoc
     - method_call
 
+# Overriding median (Max: 300), because CountAsOne makes
+# a lower number more reasonable. Default (Max: 100)
 Metrics/ClassLength:
+  Max: 200
   CountAsOne:
     - array
     - hash
     - heredoc
     - method_call
 
+# Thresholds are the median overrides from rubocop/rubocop#15363
+Metrics/CyclomaticComplexity:
+  Max: 10
+
+# Thresholds are the median overrides from rubocop/rubocop#15363
 Metrics/MethodLength:
+  Max: 22
   CountAsOne:
     - array
     - hash
     - heredoc
     - method_call
 
+# Overriding median (Max: 240), because CountAsOne makes
+# a lower number more reasonable. Default (Max: 100)
 Metrics/ModuleLength:
+  Max: 200
   CountAsOne:
     - array
     - hash
     - heredoc
     - method_call
 
+# Thresholds are the median overrides from rubocop/rubocop#15363
 Metrics/ParameterLists:
+  Max: 6
   CountKeywordArgs: false
+
+# Thresholds are the median overrides from rubocop/rubocop#15363
+Metrics/PerceivedComplexity:
+  Max: 12
+
+# Be kind
+Naming/InclusiveLanguage:
+  Enabled: true
 
 # Allow underscore to indicate private variable.
 Naming/MemoizedInstanceVariableName:
   EnforcedStyleForLeadingUnderscores: optional
 
-Performance/RedundantMerge:
-  MaxKeyValuePairs: 1
+# Rubocop 2.0
+Naming/VariableNumber:
+  Enabled: false
 
+# CountAsOne makes ExampleLength default (Max: 5) more reasonable.
+# Keep an eye on this one, if it needs to be disabled frequently
+# we may want to raise it a little.
 RSpec/ExampleLength:
   CountAsOne:
     - array
@@ -105,23 +180,131 @@ RSpec/ExampleLength:
     - heredoc
     - method_call
 
+# Slight increase from default (Max: 3)
 RSpec/NestedGroups:
   Max: 4
 
+# Increase from default (Max: 5), to avoid disabling entirely
 RSpec/MultipleMemoizedHelpers:
-  Enabled: false
+  Max: 10
 
+# Rubocop 2.0
 Style/Alias:
   EnforcedStyle: prefer_alias_method
 
+# Rubocop 2.0
+Style/BlockDelimiters:
+  Enabled: false
+
+# Rubocop 2.0
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+# Prefer documentation in my code, we like Boondoc!
+Style/Documentation:
+  Enabled: true
+
+# Rubocop 2.0
+Style/DoubleNegation:
+  Enabled: false
+
+# Rubocop 2.0
+Style/EmptyMethod:
+  EnforcedStyle: expanded
+
+# Rubocop 2.0
+Style/FormatString:
+  Enabled: false
+
+# Rubocop 2.0
 Style/FormatStringToken:
   Enabled: false
 
+# Rubocop 2.0
+# Don't disable this until Ruby 3.4 is minimum supported version
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always_true
+
+# Prefer early returns
+Style/GuardClause:
+  Enabled: true
+
+# Rubocop 2.0
+Style/IfUnlessModifier:
+  Enabled: false
+
+# Rubocop 2.0
 Style/Lambda:
   Enabled: false
 
-Style/SymbolArray:
-  MinSize: 3
+# Rubocop 2.0
+Style/ModuleFunction:
+  Enabled: false
 
+# Rubocop 2.0
+Style/NegatedIf:
+  Enabled: false
+
+# Rubocop 2.0
+Style/Next:
+  Enabled: false
+
+# Prefer underscores in long numbers
+# Disable inline for generated tables
+Style/NumericLiterals:
+  Enabled: true
+
+# Rubocop 2.0
+Style/NumericPredicate:
+  Enabled: false
+
+# Rubocop 2.0
+Style/ParallelAssignment:
+  Enabled: false
+
+# Rubocop 2.0
+Style/PerlBackrefs:
+  Enabled: false
+
+# Rubocop 2.0
+Style/RaiseArgs:
+  Enabled: false
+
+# Rubocop 2.0
+Style/RegexpLiteral:
+  Enabled: false
+
+# Rubocop 2.0
+Style/RescueStandardError:
+  EnforcedStyle: implicit
+
+# Rubocop 2.0
+Style/SignalException:
+  Enabled: false
+
+# Prefer english names when available
+Style/SpecialGlobalVars:
+  Enabled: true
+  EnforcedStyle: use_builtin_english_names
+
+# Rubocop 2.0
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+# Rubocop 2.0
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+# Rubocop 2.0 override, allow consistency with WordArray
+Style/SymbolArray:
+  Enabled: false
+
+# Rubocop 2.0
+Style/TernaryParentheses:
+  EnforcedStyle: require_parentheses_when_complex
+
+# Rubocop 2.0 override, saves a lot of characters
 Style/WordArray:
+  EnforcedStyle: percent
   MinSize: 3
