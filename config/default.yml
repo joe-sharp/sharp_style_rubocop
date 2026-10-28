@@ -48,6 +48,10 @@ Style:
 Bundler/OrderedGems:
   Enabled: true
 
+# Rubocop 2.0
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_fixed_indentation
+
 # Align 'when/else' with 'end', prevents wasting whitespace
 Layout/CaseIndentation:
   EnforcedStyle: end
