@@ -76,6 +76,14 @@ Layout/FirstArrayElementIndentation:
 Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
 
+# Enabled for readability. Counterpart Layout/MultilineMethodArgumentLineBreaks is also needed.
+Layout/FirstMethodArgumentLineBreak:
+  Enabled: true
+
+# Enabled for readability. Counterpart Layout/MultilineMethodParameterLineBreaks is also needed.
+Layout/FirstMethodParameterLineBreak:
+  Enabled: true
+
 # Key is default for both, but also allow table alignment
 Layout/HashAlignment:
   EnforcedHashRocketStyle:
@@ -85,9 +93,17 @@ Layout/HashAlignment:
     - key
     - table
 
+# Enabled for readability. Counterpart Layout/FirstMethodArgumentLineBreak is also needed.
+Layout/MultilineMethodArgumentLineBreaks:
+  Enabled: true
+
 # Prevent wasting whitespace
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
+
+# Enabled for readability. Counterpart Layout/FirstMethodParameterLineBreak is also needed.
+Layout/MultilineMethodParameterLineBreaks:
+  Enabled: true
 
 # Prevent wasting whitespace
 Layout/MultilineOperationIndentation:
