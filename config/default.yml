@@ -76,6 +76,14 @@ Layout/FirstArrayElementIndentation:
 Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
 
+# Enabled for readability. Counterpart Layout/MultilineMethodArgumentLineBreaks is also needed.
+Layout/FirstMethodArgumentLineBreak:
+  Enabled: true
+
+# Enabled for readability. Counterpart Layout/MultilineMethodParameterLineBreaks is also needed.
+Layout/FirstMethodParameterLineBreak:
+  Enabled: true
+
 # Key is default for both, but also allow table alignment
 Layout/HashAlignment:
   EnforcedHashRocketStyle:
@@ -85,9 +93,17 @@ Layout/HashAlignment:
     - key
     - table
 
+# Enabled for readability. Counterpart Layout/FirstMethodArgumentLineBreak is also needed.
+Layout/MultilineMethodArgumentLineBreaks:
+  Enabled: true
+
 # Prevent wasting whitespace
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
+
+# Enabled for readability. Counterpart Layout/FirstMethodParameterLineBreak is also needed.
+Layout/MultilineMethodParameterLineBreaks:
+  Enabled: true
 
 # Prevent wasting whitespace
 Layout/MultilineOperationIndentation:
@@ -245,6 +261,50 @@ Style/IfUnlessModifier:
 # Rubocop 2.0
 Style/Lambda:
   Enabled: false
+
+# Prefer parentheses, IgnoreMacros (default) already allows class-body and
+# block-level DSLs such as attr_*, Gemfile, Rakefile, and RSpec's it/let.
+# These are keyword-like methods and DSLs called with a receiver or in a def.
+Style/MethodCallWithArgsParentheses:
+  Enabled: true
+  AllowedMethods:
+    # Gemspec
+    - add_dependency
+    # Kernel
+    - abort
+    - exit
+    - fail
+    - p
+    - pp
+    - print
+    - puts
+    - raise
+    - require
+    - require_relative
+    - throw
+    - warn
+    - yield
+    # Rails controllers
+    - head
+    - redirect_to
+    - render
+    # RSpec
+    - and
+    - describe
+    - not_to
+    - or
+    - to
+    - to_not
+  AllowedPatterns:
+    # Minitest
+    - ^(assert|refute)(_|$)
+    - ^(must|wont)_
+  # AllowedReceivers is only set when the installed RuboCop supports it (rubocop/rubocop#16193)
+<% if RuboCop::ConfigLoader.default_configuration.for_cop("Style/MethodCallWithArgsParentheses").key?("AllowedReceivers") %>
+  AllowedReceivers:
+    # RSpec.configure block
+    - config
+<% end %>
 
 # Rubocop 2.0
 Style/ModuleFunction:

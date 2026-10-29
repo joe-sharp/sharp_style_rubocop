@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "erb"
+require "rubocop"
 require "yaml"
 require "sharp_style_rubocop"
 
@@ -15,7 +17,8 @@ RSpec.describe SharpStyleRubocop do
   end
 
   describe "config/default.yml" do
-    subject(:config) { YAML.load_file(described_class::CONFIG_PATH) }
+    # RuboCop renders config files as ERB before parsing them, so do the same here.
+    subject(:config) { YAML.load(ERB.new(File.read(described_class::CONFIG_PATH)).result) }
 
     it "loads the plugins it depends on" do
       expect(config["plugins"]).to contain_exactly("rubocop-performance", "rubocop-rspec")
