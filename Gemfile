@@ -8,3 +8,6 @@ gemspec
 gem "irb"
 gem "rake", ">= 13.0"
 gem "rspec"
+
+# Trial of AllowedReceivers from rubocop/rubocop#16193
+gem "rubocop", github: "joe-sharp/rubocop", branch: "method-call-with-args-parentheses-allowed-receivers"
