@@ -79,6 +79,13 @@ Layout/FirstHashElementIndentation:
 # Enabled for readability. Counterpart Layout/MultilineMethodArgumentLineBreaks is also needed.
 Layout/FirstMethodArgumentLineBreak:
   Enabled: true
+  # This allows the guard plugin to be on the guard line e.g.
+  #
+  # guard(:rubocop,
+  #   all_on_start: true
+  #   all_after_pass: true) do
+  Exclude:
+    - Guardfile
 
 # Enabled for readability. Counterpart Layout/MultilineMethodParameterLineBreaks is also needed.
 Layout/FirstMethodParameterLineBreak:
