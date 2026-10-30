@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-29
+
+- Exclude `db/migrate/**/*`, `db/schema.rb` and `db/*_schema.rb` from `Style/MethodCallWithArgsParentheses` since Rails generates them without parentheses.
+- Allow `send_data`, `send_file`, `flunk`, and `skip` without parentheses in `Style/MethodCallWithArgsParentheses`.
+- Remove `describe` from the RSpec `AllowedMethods` in `Style/MethodCallWithArgsParentheses`.
+- Add RSpec, RSpec::Matchers, Rails, ActiveSupport, and Rails middleware receivers to `Style/MethodCallWithArgsParentheses` `AllowedReceivers`.
+
 ## [0.1.2] - 2026-10-29
 
 - Enable `Layout/FirstMethodArgumentLineBreak`, `Layout/FirstMethodParameterLineBreak`, `Layout/MultilineMethodArgumentLineBreaks`, and `Layout/MultilineMethodParameterLineBreaks` for readability.

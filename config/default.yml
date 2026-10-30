@@ -267,6 +267,11 @@ Style/Lambda:
 # These are keyword-like methods and DSLs called with a receiver or in a def.
 Style/MethodCallWithArgsParentheses:
   Enabled: true
+  # Rails migrations and schema.rb are generated without parentheses
+  Exclude:
+    - 'db/migrate/**/*'
+    - 'db/schema.rb'
+    - 'db/*_schema.rb'
   AllowedMethods:
     # Gemspec
     - add_dependency
@@ -288,9 +293,13 @@ Style/MethodCallWithArgsParentheses:
     - head
     - redirect_to
     - render
+    - send_data
+    - send_file
+    # Minitest
+    - flunk
+    - skip
     # RSpec
     - and
-    - describe
     - not_to
     - or
     - to
@@ -302,8 +311,16 @@ Style/MethodCallWithArgsParentheses:
   # AllowedReceivers is only set when the installed RuboCop supports it (rubocop/rubocop#16193)
 <% if RuboCop::ConfigLoader.default_configuration.for_cop("Style/MethodCallWithArgsParentheses").key?("AllowedReceivers") %>
   AllowedReceivers:
-    # RSpec.configure block
+    # RSpec
+    - RSpec
+    - RSpec::Matchers
     - config
+    # Rails
+    - ActiveSupport
+    - ActiveSupport::Notifications
+    - Rails.application.config
+    - Rails.application.config.middleware
+    - config.middleware
 <% end %>
 
 # Rubocop 2.0
