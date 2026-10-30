@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-30
+
+- Exclude `Guardfile` from `Layout/FirstMethodArgumentLineBreak` so the guard plugin can sit on the guard line.
+
 ## [0.1.3] - 2026-10-29
 
 - Exclude `db/migrate/**/*`, `db/schema.rb` and `db/*_schema.rb` from `Style/MethodCallWithArgsParentheses` since Rails generates them without parentheses.
