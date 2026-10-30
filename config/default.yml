@@ -269,7 +269,9 @@ Style/MethodCallWithArgsParentheses:
   Enabled: true
   # Rails migrations and schema.rb are generated without parentheses
   Exclude:
-    - 'db/**/*'
+    - 'db/migrate/**/*'
+    - 'db/schema.rb'
+    - 'db/*_schema.rb'
   AllowedMethods:
     # Gemspec
     - add_dependency
