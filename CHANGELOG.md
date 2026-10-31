@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [0.1.5] - 2026-10-30
+
+- Enable `Layout/MultilineArrayLineBreaks` for readability.
+- Set `Layout/FirstMethodArgumentLineBreak` `AllowMultilineFinalElement` so method arguments can leave their opening brackets on the first line.
+
 ## [0.1.4] - 2026-10-30
 
 - Exclude `Guardfile` from `Layout/FirstMethodArgumentLineBreak` so the guard plugin can sit on the guard line.
