@@ -46,22 +46,9 @@ jobs:
       - name: Install shared config
         working-directory: shared
         run: bundle install
-      # Keep the target's file excludes and Ruby version so the canary lints what
-      # the project lints. Its cop overrides are dropped: they would mask the
-      # shared config, which is what the canary tests.
-      - name: Write canary config
-        working-directory: target
-        run: |
-          ruby -ryaml -e '
-            target = File.exist?(".rubocop.yml") ? YAML.safe_load_file(".rubocop.yml", aliases: true) || {} : {}
-            all_cops = target.fetch("AllCops", {}).slice("Exclude", "TargetRubyVersion")
-            config = {
-              "inherit_from" => "../shared/config/default.yml",
-              "inherit_mode" => { "merge" => ["Exclude"] }
-            }
-            config["AllCops"] = all_cops unless all_cops.empty?
-            File.write(".rubocop-canary.yml", config.to_yaml)
-          '
+      # Each target's .rubocop.yml is used as-is. Its inherit_gem entry resolves
+      # to this checkout through BUNDLE_GEMFILE, so the canary tests the shared
+      # config with the overrides consumers really run with.
       - name: Run passes
         id: run
         working-directory: target
@@ -69,9 +56,9 @@ jobs:
           set +e
           out="$RUNNER_TEMP/canary"
           mkdir -p "$out"
-          bundle exec rubocop -c .rubocop-canary.yml --format json --out "$out/stable.json"; echo $? > "$out/stable.rc"
-          bundle exec rubocop -c .rubocop-canary.yml --enable-pending-cops --format json --out "$out/pending.json"; echo $? > "$out/pending.rc"
-          bundle exec rubocop -c .rubocop-canary.yml --preview --format json --out "$out/preview.json"; echo $? > "$out/preview.rc"
+          bundle exec rubocop --format json --out "$out/stable.json"; echo $? > "$out/stable.rc"
+          bundle exec rubocop --enable-pending-cops --format json --out "$out/pending.json"; echo $? > "$out/pending.rc"
+          bundle exec rubocop --preview --format json --out "$out/preview.json"; echo $? > "$out/preview.rc"
       - name: Build report
         if: always()
         run: |
