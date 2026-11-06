@@ -21,7 +21,14 @@ RSpec.describe SharpStyleRubocop do
     subject(:config) { YAML.load(ERB.new(File.read(described_class::CONFIG_PATH)).result) }
 
     it "loads the plugins it depends on" do
-      expect(config["plugins"]).to contain_exactly("rubocop-minitest", "rubocop-performance", "rubocop-rspec")
+      expect(config["plugins"]).to contain_exactly(
+        "rubocop-capybara",
+        "rubocop-minitest",
+        "rubocop-performance",
+        "rubocop-rake",
+        "rubocop-rspec",
+        "rubocop-thread_safety"
+      )
     end
 
     it "uses LF line endings" do
