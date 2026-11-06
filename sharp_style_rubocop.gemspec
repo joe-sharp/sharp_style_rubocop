@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
 
   # config/default.yml loads these plugins, so they must be installed alongside it.
   spec.add_dependency "rubocop", "~> 1.92"
+  spec.add_dependency "rubocop-minitest", "~> 0.41"
   spec.add_dependency "rubocop-performance", "~> 1.20"
   spec.add_dependency "rubocop-rspec", "~> 3.0"
 end

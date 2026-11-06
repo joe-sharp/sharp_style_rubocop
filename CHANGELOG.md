@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Add the `rubocop-minitest` plugin as a dependency and load it in `config/default.yml`, with `Minitest` pending cops enabled up to `0.41`.
+
 ## [0.1.5] - 2026-10-30
 
 - Enable `Layout/MultilineArrayLineBreaks` for readability.

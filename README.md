@@ -2,7 +2,7 @@
 
 My RuboCop style, packaged as a gem so every project can share the same rules.
 
-It bundles a RuboCop configuration (`config/default.yml`) along with the `rubocop-performance` and `rubocop-rspec` plugins it uses.
+It bundles a RuboCop configuration (`config/default.yml`) along with the `rubocop-minitest`, `rubocop-performance`, and `rubocop-rspec` plugins it uses.
 
 See the following links for information on why I chose many of these changes:
 - [RuboCop 1.91: The Journey to 2.0 Begins](https://metaredux.com/posts/2026/09/11/rubocop-1-91.html)

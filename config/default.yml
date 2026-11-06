@@ -1,4 +1,5 @@
 plugins:
+  - rubocop-minitest
   - rubocop-performance
   - rubocop-rspec
 
@@ -28,6 +29,9 @@ Metrics:
   NewCops: '1.92'
 Migration:
   NewCops: '1.92'
+# rubocop-minitest plugin
+Minitest:
+  NewCops: '0.41'
 Naming:
   NewCops: '1.92'
 # rubocop-performance plugin
