@@ -1,7 +1,10 @@
 plugins:
+  - rubocop-capybara
   - rubocop-minitest
   - rubocop-performance
+  - rubocop-rake
   - rubocop-rspec
+  - rubocop-thread_safety
 
 AllCops:
   NewCops: pending
@@ -19,6 +22,11 @@ AllCops:
 # cops added in that version or earlier; cops added after it stay pending.
 Bundler:
   NewCops: '1.92'
+# rubocop-capybara plugin
+Capybara:
+  NewCops: '3.1'
+Capybara/RSpec:
+  NewCops: '3.1'
 Gemspec:
   NewCops: '1.92'
 Layout:
@@ -44,6 +52,9 @@ Security:
   NewCops: '1.92'
 Style:
   NewCops: '1.92'
+# rubocop-thread_safety plugin
+ThreadSafety:
+  NewCops: '0.8'
 # End NewCops overrides
 
 # Remove "Rubocop 2.0" overrides after upgrading to Rubocop 2.0

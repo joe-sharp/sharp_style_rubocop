@@ -1,6 +1,7 @@
-## [Unreleased]
+## [0.1.6] - 2026-11-07
 
 - Add the `rubocop-minitest` plugin as a dependency and load it in `config/default.yml`, with `Minitest` pending cops enabled up to `0.41`.
+- Add the `rubocop-capybara`, `rubocop-rake`, and `rubocop-thread_safety` plugins as dependencies and load them in `config/default.yml`, with pending cops enabled up to `Capybara` `3.1` and `ThreadSafety` `0.8`.
 
 ## [0.1.5] - 2026-10-30
 
