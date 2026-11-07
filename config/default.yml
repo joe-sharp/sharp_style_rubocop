@@ -44,7 +44,10 @@ Naming:
   NewCops: '1.92'
 # rubocop-performance plugin
 Performance:
-  NewCops: '1.24'
+  NewCops: '1.27'
+# rubocop-rake plugin
+Rake:
+  NewCops: '0.7'
 # rubocop-rspec plugin
 RSpec:
   NewCops: '3.10'
